@@ -1,0 +1,21 @@
+# ─── Copy this file and rename to application-dev.yaml / application-prod.yaml ─
+# ─── Fill in your own credentials ───────────────────────────────────────────────
+
+spring:
+  datasource:
+    url: jdbc:postgresql://YOUR_HOST/YOUR_DB?sslmode=require
+    username: YOUR_USERNAME
+    password: YOUR_PASSWORD
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 8080
