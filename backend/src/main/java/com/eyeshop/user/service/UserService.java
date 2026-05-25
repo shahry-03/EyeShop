@@ -1,5 +1,8 @@
 package com.eyeshop.user.service;
 
+import com.eyeshop.user.dto.request.UserRegisterRequest;
+import com.eyeshop.user.dto.request.UserUpdateRequest;
+import com.eyeshop.user.dto.response.UserResponse;
 import com.eyeshop.user.entity.Role;
 import com.eyeshop.user.entity.User;
 import com.eyeshop.user.repository.UserRepository;
@@ -16,43 +19,51 @@ public class UserService {
     // CUSTOMER Methods
 
     // ----Register User----
-    public User registerUser(User user) {
+    public UserResponse registerUser(UserRegisterRequest request) {
         // Check if user with the same email already exists
-        if(userRepository.existsByEmail(user.getEmail())) {
-            throw new IllegalArgumentException("User with this email already exists: "+ user.getEmail());
+        if(userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("User with this email already exists: "+ request.getEmail());
         }
-        // Set the default role to CUSTOMER
-        user.setRole(Role.CUSTOMER);
+        // Create a new user entity
+        User user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(request.getPassword())
+                .role(Role.CUSTOMER)  // Set the default role to CUSTOMER
+                .build();
         // Save the user to the database
-        return userRepository.save(user);
-
+        return UserResponse.fromEntity(userRepository.save(user));
     }
     // ----Update User----
-    public User updateUser(Long id, User user) {
-        User existingUser = getUserById(id);
-        existingUser.setUsername(user.getUsername());
-        existingUser.setEmail(user.getEmail());
-        existingUser.setPassword(user.getPassword());
-        return userRepository.save(existingUser);
+    public UserResponse updateUser(Long id, UserUpdateRequest updateRequest) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        existingUser.setUsername(updateRequest.getUsername());
+        existingUser.setEmail(updateRequest.getEmail());
+        return UserResponse.fromEntity(userRepository.save(existingUser));
     }
 
     // Admin Methods
 
     // ----Get User By Id----
-    public User getUserById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id ));
+    public UserResponse getUserById(Long id) {
+        return UserResponse.fromEntity(userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id )));
     }
 
-    public List<User> getAllUsers(){
-        return userRepository.findAll();
+    public List<UserResponse> getAllUsers(){
+        return userRepository.findAll().stream()
+                .map(UserResponse::fromEntity)
+                .toList();
     }
 
 
 
     // ----Delete User----
     public void deleteUser(Long id) {
-        getUserById(id); // Check if user exists before deleting
+        // Check if user exists before deleting
+        userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         userRepository.deleteById(id);
     }
 }

@@ -1,5 +1,8 @@
 package com.eyeshop.user.controller;
 
+import com.eyeshop.user.dto.request.UserRegisterRequest;
+import com.eyeshop.user.dto.request.UserUpdateRequest;
+import com.eyeshop.user.dto.response.UserResponse;
 import com.eyeshop.user.entity.User;
 import com.eyeshop.user.service.UserService;
 import jakarta.validation.Valid;
@@ -19,27 +22,27 @@ public class UserController {
 
     // ----Register User----
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@Valid @RequestBody User user) {
+    public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody UserRegisterRequest userRegisterRequest) {
           return ResponseEntity.status(HttpStatus.CREATED)
-                  .body(userService.registerUser(user));
+                  .body(userService.registerUser(userRegisterRequest));
     }
 
     // ----Get User By Id----
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
     // ----Get All Users----
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     // ----Update User----
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody User user) {
-        return ResponseEntity.ok(userService.updateUser(id, user));
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest userUpdateRequest) {
+        return ResponseEntity.ok(userService.updateUser(id, userUpdateRequest));
     }
 
     //----delete User----
