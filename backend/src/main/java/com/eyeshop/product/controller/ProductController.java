@@ -1,6 +1,8 @@
 package com.eyeshop.product.controller;
 
-import com.eyeshop.product.entity.Product;
+import com.eyeshop.product.dto.request.ProductAddRequest;
+import com.eyeshop.product.dto.request.ProductUpdateRequest;
+import com.eyeshop.product.dto.response.ProductResponse;
 import com.eyeshop.product.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,14 +21,14 @@ public class ProductController {
     // Admin methods
     // Add Product
     @PostMapping
-    public ResponseEntity<Product> addProduct(@RequestBody @Valid Product product) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productService.addProduct(product));
+    public ResponseEntity<ProductResponse> addProduct(@RequestBody @Valid ProductAddRequest productAddRequest) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(productService.addProduct(productAddRequest));
     }
 
     // Update Product
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody @Valid Product product) {
-        return ResponseEntity.ok(productService.updateProduct(id, product));
+    public ResponseEntity<ProductResponse> updateProduct(@PathVariable Long id, @RequestBody @Valid ProductUpdateRequest productUpdateRequest) {
+        return ResponseEntity.ok(productService.updateProduct(id, productUpdateRequest));
     }
 
     // Delete Product
@@ -39,19 +41,19 @@ public class ProductController {
     // Customer methods
     // Get All Products
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
+    public ResponseEntity<List<ProductResponse>> getAllProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
     // Get Product By Id
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
     // Get Products By Category
     @GetMapping("/category/{category}")
-    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable String category) {
+    public ResponseEntity<List<ProductResponse>> getProductsByCategory(@PathVariable String category) {
         return ResponseEntity.ok(productService.getProductsByCategory(category));
     }
 
