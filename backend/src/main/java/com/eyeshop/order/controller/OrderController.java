@@ -1,8 +1,9 @@
 package com.eyeshop.order.controller;
 
-import com.eyeshop.order.entity.Order;
-import com.eyeshop.order.entity.OrderItem;
+import com.eyeshop.order.dto.request.OrderRequest;
+import com.eyeshop.order.dto.response.OrderResponse;
 import com.eyeshop.order.service.OrderService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,14 +19,14 @@ public class OrderController {
     //CUSTOMER Methods
     //Place Order
     @PostMapping
-    public ResponseEntity<Order> placeOrder(@RequestParam Long userId, @RequestBody List<OrderItem> items){
+    public ResponseEntity<OrderResponse> placeOrder( @Valid @RequestBody OrderRequest orderRequest){
         // Implementation will be done in service layer
-        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.placeOrder(userId, items));
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.placeOrder(orderRequest));
     }
 
     // Cancel Order
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<Order> cancelOrder(@PathVariable Long id){
+    public ResponseEntity<OrderResponse> cancelOrder(@PathVariable Long id){
         // Implementation will be done in service layer
         return ResponseEntity.ok(orderService.cancelOrder(id));
     }
@@ -35,13 +36,13 @@ public class OrderController {
     //Admin Methods
     // Get Order By Id
     @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrderById(@PathVariable Long id){
+    public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id){
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
     // Get Orders By User Id
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Order>> getOrdersByUserId(@PathVariable Long userId){
+    public ResponseEntity<List<OrderResponse>> getOrdersByUserId(@PathVariable Long userId){
         return ResponseEntity.ok(orderService.getOrdersByUserId(userId));
     }
 

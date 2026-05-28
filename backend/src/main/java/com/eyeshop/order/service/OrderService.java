@@ -1,5 +1,8 @@
 package com.eyeshop.order.service;
 
+import com.eyeshop.order.dto.request.OrderItemRequest;
+import com.eyeshop.order.dto.request.OrderRequest;
+import com.eyeshop.order.dto.response.OrderResponse;
 import com.eyeshop.order.entity.Order;
 import com.eyeshop.order.entity.OrderItem;
 import com.eyeshop.order.entity.Status;
@@ -11,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -22,71 +26,90 @@ public class OrderService {
 
     // --- Place the Order
     @Transactional
-    public Order placeOrder(Long userId, List<OrderItem> items){
+    public OrderResponse placeOrder(OrderRequest orderRequest) {
         // Step1: user exists check
-        userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        userRepository.findById(orderRequest.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + orderRequest.getUserId()));
 
         double totalPrice = 0;
+
+        // List of Order Items
+        List<OrderItem> orderItems = new ArrayList<>();
+
         // Step2: check for each order item
-        for(OrderItem item: items){
+        for(OrderItemRequest itemRequest: orderRequest.getItemsList()){
             // product exists check
-            Product product = productRepository.findById(item.getProductId())
+            Product product = productRepository.findById(itemRequest.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found with id: "
-                            + item.getProductId()));
+                            + itemRequest.getProductId()));
 
             // stock check
-            if(product.getStock() < item.getQuantity()){
+            if(product.getStock() < itemRequest.getQuantity()){
                 throw new RuntimeException("Insufficient stock for product: "
                         + product.getName() + ". Available stock: " + product.getStock());
             }
 
-            // Set the price of item
-            item.setPrice(product.getPrice() * item.getQuantity());
+            // Calculate the price
+            double itemPrice = product.getPrice() * itemRequest.getQuantity();;
 
             // add in total price
-            totalPrice += item.getPrice();
+            totalPrice += itemPrice;
 
             // Reduce the stock
-            product.setStock(product.getStock() - item.getQuantity());
+            product.setStock(product.getStock() - itemRequest.getQuantity());
+
+            // build the Order Item
+            OrderItem orderItem = OrderItem.builder()
+                    .productId(itemRequest.getProductId())
+                    .quantity(itemRequest.getQuantity())
+                    .price(itemPrice)
+                    .build();
+
+            orderItems.add(orderItem);
 
         }
-        //Step3: build the Order
+
+
+        // Step 5: Build the Order
         Order order = Order.builder()
-                .userId(userId)
-                .items(items)
+                .userId(orderRequest.getUserId())
                 .totalPrice(totalPrice)
                 .status(Status.PLACED)
+                .items(orderItems)
                 .build();
 
         //Step4: Link each item with Order
-        for (OrderItem orderItem : items){
+        for (OrderItem orderItem : orderItems){
             orderItem.setOrder(order);
         }
 
         // save the order
-        return orderRepository.save(order);
+        return OrderResponse.fromEntity(orderRepository.save(order));
 
     }
 
     // ---Get Order By Id
-    public Order getOrderById(Long orderId) {
-        return orderRepository.findById(orderId)
+    public OrderResponse getOrderById(Long orderId) {
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
-
+        return OrderResponse.fromEntity(order);
     }
 
     // --- Get Orders by userId
-    public List<Order> getOrdersByUserId(Long userId) {
-        return orderRepository.findByUserId(userId);
+    public List<OrderResponse> getOrdersByUserId(Long userId) {
+        return orderRepository.findByUserId(userId)
+                .stream()
+                .map(OrderResponse::fromEntity)
+                .toList();
     }
 
     // Cancel the order
     @Transactional
-    public Order cancelOrder(Long orderId) {
+    public OrderResponse cancelOrder(Long orderId) {
 
         // First of all we find the order which we want to cancel
-        Order order = getOrderById(orderId);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
         //Already Cancelled check
         if (order.getStatus() == Status.CANCELLED) {
             throw new IllegalStateException("Order is already cancelled.");
@@ -102,6 +125,6 @@ public class OrderService {
 
         //Update the status
         order.setStatus(Status.CANCELLED);
-        return orderRepository.save(order);
+        return OrderResponse.fromEntity(orderRepository.save(order));
     }
 }
